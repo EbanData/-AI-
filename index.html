@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智语防衰</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f7fb;
+    min-height: 100vh;
+    color: #333;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .logo {
+    height: 28px;
+    width: auto;
+  }
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  /* 搜索区 */
+  .search-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 24px;
+  }
+  .search-row {
+    display: flex;
+    gap: 12px;
+  }
+  .search-row input {
+    flex: 1;
+    height: 48px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-row input:focus {
+    border-color: #4f6ef7;
+  }
+  .topk-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    font-size: 14px;
+    color: #888;
+    font-weight: 500;
+  }
+  .topk-input {
+    width: 52px;
+    height: 32px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+  .topk-input::-webkit-inner-spin-button,
+  .topk-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .topk-input:focus { border-color: #4f6ef7; }
+  .search-row button {
+    height: 48px;
+    padding: 0 32px;
+    background: #4f6ef7;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .search-row button:hover { background: #3d5bd9; }
+  .search-row button:disabled {
+    background: #a0b0f0;
+    cursor: not-allowed;
+  }
+
+  /* 模式切换 */
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .mode-tab {
+    flex: 1;
+    height: 42px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fafafa;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #666;
+  }
+  .mode-tab:hover { border-color: #4f6ef7; color: #4f6ef7; }
+  .mode-tab.active {
+    background: #4f6ef7;
+    border-color: #4f6ef7;
+    color: #fff;
+  }
+  .mode-tab .badge {
+    font-size: 11px;
+    opacity: 0.7;
+  }
+  .mode-tab.active .badge { opacity: 0.85; }
+
+  /* 结果区 */
+  .result-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #888;
+  }
+  .result-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .result-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s;
+    border-left: 4px solid #4f6ef7;
+  }
+  .result-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  .result-header .filename {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .result-header .score {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4f6ef7;
+    white-space: nowrap;
+  }
+  .result-header .filetype {
+    font-size: 11px;
+    background: #eef1ff;
+    color: #4f6ef7;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .result-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #555;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* 空状态 */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #bbb;
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+  }
+  .spinner {
+    display: inline-block;
+    width: 32px; height: 32px;
+    border: 3px solid #e0e0e0;
+    border-top-color: #4f6ef7;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-bottom: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    background: #fff0f0;
+    color: #d33;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    border-left: 4px solid #d33;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 20px 12px; }
+    .search-row { flex-direction: column; }
+    .search-row button { width: 100%; }
+    .topk-wrap { align-self: flex-end; }
+    .mode-tabs { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1><img src="logo.png" class="logo" alt="logo"> 智语防衰</h1>
+
+  <div class="search-box">
+    <div class="search-row">
+      <input type="text" id="queryInput" placeholder="输入搜索关键词，如：阿尔茨海默症治疗、认知训练..." autofocus>
+      <div class="topk-wrap">
+        <span>显示</span>
+        <input type="number" id="topKInput" value="10" min="1" max="50" class="topk-input">
+        <span>条</span>
+      </div>
+      <button id="searchBtn" onclick="doSearch()">搜索</button>
+    </div>
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="hybrid" onclick="switchMode(this)">
+        <span>混合检索</span>
+        <span class="badge">推荐</span>
+      </button>
+      <button class="mode-tab" data-mode="semantic" onclick="switchMode(this)">
+        <span>语义检索</span>
+        <span class="badge">向量</span>
+      </button>
+      <button class="mode-tab" data-mode="keyword" onclick="switchMode(this)">
+        <span>关键词检索</span>
+        <span class="badge">BM25</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 结果区 -->
+  <div id="resultArea">
+    <div class="empty-state">
+      <div class="icon">&#128269;</div>
+      <p>输入关键词开始搜索</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:8001' : '';
+let currentMode = 'hybrid';
+
+function switchMode(el) {
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentMode = el.dataset.mode;
+}
+
+document.getElementById('queryInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doSearch();
+});
+
+async function doSearch() {
+  const query = document.getElementById('queryInput').value.trim();
+  if (!query) return;
+
+  const topKInput = document.getElementById('topKInput');
+  let topK = parseInt(topKInput.value, 10);
+  if (isNaN(topK) || topK < 1) topK = 1;
+  if (topK > 50) topK = 50;
+  topKInput.value = topK;
+
+  const btn = document.getElementById('searchBtn');
+  const area = document.getElementById('resultArea');
+
+  btn.disabled = true;
+  btn.textContent = '搜索中...';
+
+  area.innerHTML = '<div class="loading"><div class="spinner"></div><p>正在检索，请稍候...</p></div>';
+
+  try {
+    const resp = await fetch(API_BASE + '/api/search/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, mode: currentMode, top_k: topK })
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(errText || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    renderResults(data, query);
+  } catch (err) {
+    area.innerHTML = '<div class="error-msg">请求失败：' + escapeHtml(err.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '搜索';
+  }
+}
+
+const MODE_LABELS = { hybrid: '混合检索', semantic: '语义检索', keyword: '关键词检索' };
+
+function renderResults(data, query) {
+  const area = document.getElementById('resultArea');
+
+  if (!data.results || data.results.length === 0) {
+    area.innerHTML = '<div class="empty-state"><div class="icon">&#128533;</div><p>未找到相关结果，换个关键词试试</p></div>';
+    return;
+  }
+
+  let html = '<div class="result-meta">';
+  html += '<span>找到 <strong>' + data.total + '</strong> 条结果</span>';
+  html += '<span>模式：' + (MODE_LABELS[data.mode] || data.mode) + '</span>';
+  html += '</div>';
+
+  html += '<div class="result-list">';
+
+  for (const item of data.results) {
+    const scorePct = (item.score * 100).toFixed(1);
+    const text = escapeHtml(item.text);
+    const filename = escapeHtml(item.filename);
+
+    html += '<div class="result-card">';
+    html += '  <div class="result-header">';
+    html += '    <span class="filename" title="' + filename + '">' + filename + '</span>';
+    html += '    <span class="filetype">' + escapeHtml(item.file_type) + '</span>';
+    html += '    <span class="score">' + scorePct + '%</span>';
+    html += '  </div>';
+    html += '  <div class="result-text">' + text + '</div>';
+    html += '</div>';
+  }
+
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
